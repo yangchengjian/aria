@@ -1,0 +1,22 @@
+{application, aria,
+  [{description, "An OTP application"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {aria_app, []}},
+    {applications,
+      [
+        kernel,
+        stdlib,
+        erocksdb,
+        lager,
+        jsx
+      ]},
+    {env, [
+      {cube_meta_key, <<"cube_meta_key">>},
+      {default_cube_index, {0, 0, 1}}
+    ]},
+    {modules, []},
+
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+  ]}.

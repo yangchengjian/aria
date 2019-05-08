@@ -1,7 +1,7 @@
 aria
 =====
 
-An OTP application
+A AI system with wisdom
 
 Build
 -----

@@ -120,7 +120,10 @@ handle_cast(_Request, State) ->
   {stop, Reason :: term(), NewState :: #state{}}).
 handle_info({init, {MinZ, MaxZ}}, #state{zyx = {Z, Y, X}} = State) ->
   utils_log:debug("[~p, ~p] handle_info {MinZ, MaxZ}: ~p, {Z, Y, X}: ~p", [?MODULE, ?LINE, {MinZ, MaxZ}, {Z, Y, X}]),
-  utils_tool:init_z([{MinZ, MaxZ}, {Y, Y + 10}, {X, X + 10}]),
+  utils_tool:init_z([{MinZ, MaxZ}, {Y, Y + 9}, {X, X + 9}]),
+  {noreply, State};
+handle_info({data, List}, #state{zyx = {Z, Y, X}} = State) ->
+  utils_log:debug("[~p, ~p] handle_info List: ~p, {Z, Y, X}: ~p", [?MODULE, ?LINE, List, {Z, Y, X}]),
   {noreply, State};
 handle_info(Info, State) ->
   utils_log:debug("[~p, ~p] handle_info Info: ~p", [?MODULE, ?LINE, Info]),

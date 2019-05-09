@@ -15,9 +15,9 @@
 ]).
 
 
-init_with_agent([{MinZ, MaxZ}, {_MinY, _MaxY}, {_MinX, _MaxX}]) when MinZ >= MaxZ ->
+init_with_agent([{MinZ, MaxZ}]) when MinZ > MaxZ ->
   ok;
-init_with_agent([{MinZ, MaxZ}, {MinY, MaxY}, {MinX, MaxX}]) ->
-  PidList = matrix_agent_id:get_ids([{MinY, MaxY}, {MinX, MaxX}]),
+init_with_agent([{MinZ, MaxZ}]) ->
+  PidList = matrix_agent_id:get_ids([{0, 99}, {0, 99}]),
   utils_tool:send(PidList, {init, {MinZ, MaxZ}}).
 

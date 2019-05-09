@@ -24,15 +24,14 @@ get_zyx(Id) ->
   <<Z:16/integer, Y:16/integer, X:16/integer>> = erlang:atom_to_binary(Id, latin1),
   {Z, Y, X}.
 
-
 get_ids([{MinY, MaxY}, {MinX, MaxX}]) ->
   ListY = lists:seq(MinY, MaxY, 10),
   ListX = lists:seq(MinX, MaxX, 10),
-  utils_log:debug("[~p, ~p] generate_pid_list ListY: ~p, ListX: ~p", [?MODULE, ?LINE, ListY, ListX]),
+%%  utils_log:debug("[~p, ~p] generate_pid_list ListY: ~p, ListX: ~p", [?MODULE, ?LINE, ListY, ListX]),
   generate_pid_list(ListY, ListX, []).
 
 generate_pid_list([], _ListX, Result) ->
-  utils_log:debug("[~p, ~p] generate_pid_list Result: ~p", [?MODULE, ?LINE, Result]),
+%%  utils_log:debug("[~p, ~p] generate_pid_list Result: ~p", [?MODULE, ?LINE, Result]),
   Result;
 generate_pid_list([Y | ListY], ListX, Result) ->
   Result0 = generate_pid_list_(Y, ListX, []),
@@ -41,7 +40,7 @@ generate_pid_list([Y | ListY], ListX, Result) ->
 generate_pid_list_(_Y, [], Result) ->
   Result;
 generate_pid_list_(Y, [X | ListX], Result) ->
-  utils_log:debug("[~p, ~p] generate_pid_list_ Y: ~p, X: ~p", [?MODULE, ?LINE, Y, X]),
+%%  utils_log:debug("[~p, ~p] generate_pid_list_ Y: ~p, X: ~p", [?MODULE, ?LINE, Y, X]),
   R = get_id({Y, X}),
   generate_pid_list_(Y, ListX, [R | Result]).
 

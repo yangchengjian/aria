@@ -232,19 +232,19 @@ send([Pid | PidList], Msg) ->
     Pid ! Msg,
     send(PidList, Msg).
 
-init_z([{MinZ, MaxZ}, {_MinY, _MaxY}, {_MinX, _MaxX}]) when MinZ >= MaxZ ->
+init_z([{MinZ, MaxZ}, {_MinY, _MaxY}, {_MinX, _MaxX}]) when MinZ > MaxZ ->
     ok;
 init_z([{MinZ, MaxZ}, {MinY, MaxY}, {MinX, MaxX}]) ->
     init_y([{MinZ, MaxZ}, {MinY, MaxY}, {MinX, MaxX}]),
     init_z([{MinZ + 1, MaxZ}, {MinY, MaxY}, {MinX, MaxX}]).
 
-init_y([{_MinZ, _MaxZ}, {MinY, MaxY}, {_MinX, _MaxX}]) when MinY >= MaxY ->
+init_y([{_MinZ, _MaxZ}, {MinY, MaxY}, {_MinX, _MaxX}]) when MinY > MaxY ->
     ok;
 init_y([{MinZ, MaxZ}, {MinY, MaxY}, {MinX, MaxX}]) ->
     init_x([{MinZ, MaxZ}, {MinY, MaxY}, {MinX, MaxX}]),
     init_y([{MinZ, MaxZ}, {MinY + 1, MaxY}, {MinX, MaxX}]).
 
-init_x([{_MinZ, _MaxZ}, {_MinY, _MaxY}, {MinX, MaxX}]) when MinX >= MaxX ->
+init_x([{_MinZ, _MaxZ}, {_MinY, _MaxY}, {MinX, MaxX}]) when MinX > MaxX ->
     ok;
 init_x([{MinZ, MaxZ}, {MinY, MaxY}, {MinX, MaxX}]) ->
     utils_log:debug("[~p, ~p] init_x: ~p~n", [?MODULE, ?LINE, {MinZ, MinY, MinX}]),

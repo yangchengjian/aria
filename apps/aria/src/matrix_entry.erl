@@ -21,7 +21,7 @@ map(Matrix3i) ->
 %%        {1, 0, 4}, {1, 1, 5}, {1, 2, 6},
 %%        {2, 0, 7}, {2, 1, 8}, {2, 2, 9}],
     Fun = fun({Y, X, Value}) ->
-        NodeKey = matrix_node_key:get_key({0, Y, X}),
+        NodeKey = matrix_node_id:get_id({0, Y, X}),
         Decoder = matrix_node:decoder(),
         Encoder = matrix_node:encoder(),
         NewNode = case matrix_database:get(NodeKey) of
@@ -29,7 +29,7 @@ map(Matrix3i) ->
                        RawNode = Decoder(NodeJson),
                        matrix_node:set_state(RawNode, matrix_node_state:get_state({0, 0, Value}));
                    {error, _} ->
-                       matrix_node:new_node(NodeKey, matrix_util:to_binary(Value), matrix_util:epoch_micro_ts(), matrix_node_key:get_key({1, Y, X}))
+                       matrix_node:new_node(NodeKey, matrix_util:to_binary(Value), matrix_util:epoch_micro_ts(), matrix_node_id:get_id({1, Y, X}))
                end,
         NewNodeJson = Encoder(NewNode),
         matrix_database:put(NodeKey, NewNodeJson)

@@ -31,12 +31,11 @@ start_link() ->
 %% Before OTP 18 tuples must be used to specify a child. e.g.
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-  MatrixDatabaseLeveldb = child(matrix_database_rocksdb),
+  MatrixDatabase = child(matrix_database_rocksdb),
   MatrixCube = child(matrix_cube),
-  {ok, {{one_for_all, 0, 1}, [
-    MatrixDatabaseLeveldb,
-    MatrixCube
-  ]}}.
+  MatrixAgents = agents(),
+  Childs = lists:merge([MatrixDatabase, MatrixCube], MatrixAgents),
+  {ok, {{one_for_all, 0, 1}, Childs}}.
 
 %%====================================================================
 %% Internal functions
@@ -44,3 +43,12 @@ init([]) ->
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 child(Id) ->
   {Id, {Id, start_link, []}, permanent, 5000, worker, [Id]}.
+
+agents() ->
+  agents(matrix_agent_id:get_ids([{0, 99}, {0, 99}]), []).
+
+agents([], Result) ->
+  Result;
+agents([AgentId | AgentIdList], Result) ->
+  MatrixAgent = {AgentId, {matrix_agent, start_link, [AgentId]}, permanent, 5000, worker, []},
+  agents(AgentIdList, [MatrixAgent | Result]).

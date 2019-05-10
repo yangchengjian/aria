@@ -1,3 +1,6 @@
+%%% This Source Code Form is subject to the terms of the Mozilla Public
+%%% License, v. 2.0. If a copy of the MPL was not distributed with this
+%%% file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 %%%-------------------------------------------------------------------
 %%% @author captcha
 %%% @copyright (C) 2017, <COMPANY>
@@ -11,29 +14,49 @@
 
 %% API
 -export([
-    map/1
+  test/0,
+  split_10x10/1
 ]).
 
--spec map(Matrix3i::list()) -> ok.
-map(Matrix3i) ->
-%%    Matrix3i = [
-%%        {0, 0, 1}, {0, 1, 2}, {0, 2, 3},
-%%        {1, 0, 4}, {1, 1, 5}, {1, 2, 6},
-%%        {2, 0, 7}, {2, 1, 8}, {2, 2, 9}],
-    Fun = fun({Y, X, Value}) ->
-        NodeKey = matrix_node_key:get_key({0, Y, X}),
-        Decoder = matrix_node:decoder(),
-        Encoder = matrix_node:encoder(),
-        NewNode = case matrix_database:get(NodeKey) of
-                   {ok, NodeJson} ->
-                       RawNode = Decoder(NodeJson),
-                       matrix_node:set_state(RawNode, matrix_node_state:get_state({0, 0, Value}));
-                   {error, _} ->
-                       matrix_node:new_node(NodeKey, matrix_util:to_binary(Value), matrix_util:epoch_micro_ts(), matrix_node_key:get_key({1, Y, X}))
-               end,
-        NewNodeJson = Encoder(NewNode),
-        matrix_database:put(NodeKey, NewNodeJson)
-          end,
-    lists:foreach(Fun, Matrix3i).
+test() ->
+%%  List = generate_matrix(100, 100, []),
+  List = lists:seq(1, 10000),
+%%  utils_log:debug("[~p, ~p] test List: ~p", [?MODULE, ?LINE, List]),
+  List1 = split_10x10(List),
+  utils_log:debug("[~p, ~p] test List: ~p", [?MODULE, ?LINE, List1]),
+  send(List1).
 
+send([]) ->
+  ok;
+send([{Y, X, List100} | List]) ->
+  erlang:send_after(10, matrix_agent_id:get_id({Y * 10, X * 10}), {data, List100}),
+  send(List).
 
+%% sort like
+%% 7,8,9,
+%% 4,5,6,
+%% 1,2,3,
+
+split_10x10(List) ->
+  Fun = fun(I) ->
+    List100 = lists:sublist(List, I, 100),
+%%    utils_log:debug("[~p, ~p] split_10x10 X: ~p, List100: ~p", [?MODULE, ?LINE, I, List100]),
+    Index = I div 100,
+    Y = Index div 10,
+    X = Index rem 10,
+    utils_log:debug("[~p, ~p] split_10x10 index Y X: ~p", [?MODULE, ?LINE, {Index, Y, X}]),
+    {Y, X, List100}
+        end,
+  lists:map(Fun, lists:seq(1, 10000, 100)).
+
+%%generate_matrix(Y, X, Result) when Y =:= 0 ->
+%%  Result;
+%%generate_matrix(Y, X, Result) ->
+%%  R = generate_matrix_(X, []),
+%%%%  utils_log:debug("[~p, ~p] test R: ~p", [?MODULE, ?LINE, R]),
+%%  generate_matrix(Y - 1, X, lists:merge(R, Result)).
+%%
+%%generate_matrix_(X, Result) when X =:= 0 ->
+%%  Result;
+%%generate_matrix_(X, Result) ->
+%%  generate_matrix_(X - 1, [rand:uniform(100) | Result]).

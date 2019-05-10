@@ -1,3 +1,6 @@
+%%% This Source Code Form is subject to the terms of the Mozilla Public
+%%% License, v. 2.0. If a copy of the MPL was not distributed with this
+%%% file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 %%%-------------------------------------------------------------------
 %%% @author captcha
 %%% @copyright (C) 2017, <COMPANY>
@@ -206,7 +209,7 @@ case_matrix_database_get(_CubeMetaKey, {ok, IndexNodeJson}) ->
 case_matrix_database_get(CubeMetaKey, {error, _Reason}) ->
     DefaultCubeIndex = utils_env:get(default_cube_index, {0, 0, 1}),
     utils_log:debug("[~p, ~p] DefaultCubeIndex: ~p~n", [?MODULE, ?LINE, DefaultCubeIndex]),
-    IndexNodeList = [{matrix_cube_key:get_key(DefaultCubeIndex), node()}],
+    IndexNodeList = [{matrix_cube_id:get_id(DefaultCubeIndex), node()}],
     IndexNodeJson = utils_json:encode(IndexNodeList),
     matrix_database:put(CubeMetaKey, IndexNodeJson),
     IndexNodeList.
@@ -217,7 +220,7 @@ update_cude_in_matrix(CubeIndex, Node) ->
     ok.
 
 add_cube_to_matrix(CubeIndex, Node) ->
-    CudeKey = matrix_cube_key:get_key(CubeIndex),
+    CudeKey = matrix_cube_id:get_id(CubeIndex),
     AddIndexNode = [{CudeKey, Node}],
     CubeMetaKey = utils_env:get(cube_meta_key, <<"cube_meta_key">>),
     IndexNodeList = read_cube_from_db(CubeMetaKey),

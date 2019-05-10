@@ -1,3 +1,6 @@
+%%% This Source Code Form is subject to the terms of the Mozilla Public
+%%% License, v. 2.0. If a copy of the MPL was not distributed with this
+%%% file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 %%%-------------------------------------------------------------------
 %%% @author captcha
 %%% @copyright (C) 2017, <COMPANY>
@@ -6,20 +9,20 @@
 %%% @end
 %%% Created : 27. Sep 2017 下午3:01
 %%%-------------------------------------------------------------------
--module(matrix_node_key).
+-module(matrix_node_id).
 -author("captcha").
 
 %% API
 -export([
-    get_key/1,
+    get_id/1,
     get_zyx/1
 ]).
 
 %% @doc
 %% according to X, Y, Z get a key for save data
 %% @end
--spec get_key(X :: tuple()) -> binary().
-get_key({Z, Y, X}) ->
+-spec get_id(X :: tuple()) -> binary().
+get_id({Z, Y, X}) ->
     <<Z:16/integer, Y:16/integer, X:16/integer>>.
 
 %% @doc

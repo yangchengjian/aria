@@ -2,38 +2,34 @@
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
 %%% file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 %%%-------------------------------------------------------------------
-%%% @author captcha
-%%% @copyright (C) 2017, <COMPANY>
+%%% @author yangchengjian
+%%% @copyright (C) 2019, <COMPANY>
 %%% @doc
 %%%
 %%% @end
-%%% Created : 26. Sep 2017 下午2:53
+%%% Created : 09. May 2019 10:08
 %%%-------------------------------------------------------------------
--module(matrix_database_rocksdb).
--author("captcha").
+-module(matrix_agent).
+-author("yangchengjian").
 
 -behaviour(gen_server).
 
 %% API
 -export([
-    start_link/0,
-    put/2, put/3,
-    get/1, get/2
+  start_link/0, start_link/1
 ]).
 
 %% gen_server callbacks
--export([
-    init/1,
-    handle_call/3,
-    handle_cast/2,
-    handle_info/2,
-    terminate/2,
-    code_change/3
-]).
+-export([init/1,
+  handle_call/3,
+  handle_cast/2,
+  handle_info/2,
+  terminate/2,
+  code_change/3]).
 
 -define(SERVER, ?MODULE).
 
--record(state, {ref}).
+-record(state, {zyx}).
 
 %%%===================================================================
 %%% API
@@ -46,20 +42,18 @@
 %% @end
 %%--------------------------------------------------------------------
 -spec(start_link() ->
-    {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
+  {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
 start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-put(Key, Value) ->
-    put(Key, Value, [{sync, true}]).
+-spec(start_link([{X :: integer(), Y :: integer()}]) ->
+  {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
+start_link(AgentId) ->
+%%  utils_log:debug("[~p, ~p] start_link AgentId: ~p", [?MODULE, ?LINE, AgentId]),
+  ZYX = matrix_agent_id:get_zyx(AgentId),
+  utils_log:debug("[~p, ~p] start_link {Z, Y, X}: ~p", [?MODULE, ?LINE, ZYX]),
+  gen_server:start_link({local, AgentId}, ?MODULE, [ZYX], []).
 
-put(Key, Value, Opts) ->
-    gen_server:call(?SERVER, {put, Key, Value, Opts}).
-
-get(Key) ->
-    get(Key, []).
-get(Key, Opts) ->
-    gen_server:call(?SERVER, {get, Key, Opts}).
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
@@ -76,14 +70,10 @@ get(Key, Opts) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec(init(Args :: term()) ->
-    {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
-    {stop, Reason :: term()} | ignore).
-init([]) ->
-    Name = "./matrix_rocksdb",
-    DBOpts = [{create_if_missing, true}],
-    CFOpts = [{compression, snappy}],
-    {ok, Ref} = erocksdb:open(Name, DBOpts, CFOpts),
-    {ok, #state{ref = Ref}}.
+  {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
+  {stop, Reason :: term()} | ignore).
+init([ZYX]) ->
+  {ok, #state{zyx = ZYX}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -94,20 +84,14 @@ init([]) ->
 %%--------------------------------------------------------------------
 -spec(handle_call(Request :: term(), From :: {pid(), Tag :: term()},
     State :: #state{}) ->
-    {reply, Reply :: term(), NewState :: #state{}} |
-    {reply, Reply :: term(), NewState :: #state{}, timeout() | hibernate} |
-    {noreply, NewState :: #state{}} |
-    {noreply, NewState :: #state{}, timeout() | hibernate} |
-    {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
-    {stop, Reason :: term(), NewState :: #state{}}).
-handle_call({put, Key, Value, Opts}, _From, #state{ref = Ref} = State) ->
-    Reply = do_put(erocksdb:put(Ref, Key, Value, Opts)),
-    {reply, Reply, State};
-handle_call({get, Key, Opts}, _From, #state{ref = Ref} = State) ->
-    Reply = do_get(erocksdb:get(Ref, Key, Opts)),
-    {reply, Reply, State};
+  {reply, Reply :: term(), NewState :: #state{}} |
+  {reply, Reply :: term(), NewState :: #state{}, timeout() | hibernate} |
+  {noreply, NewState :: #state{}} |
+  {noreply, NewState :: #state{}, timeout() | hibernate} |
+  {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
+  {stop, Reason :: term(), NewState :: #state{}}).
 handle_call(_Request, _From, State) ->
-    {reply, ok, State}.
+  {reply, ok, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -117,11 +101,11 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec(handle_cast(Request :: term(), State :: #state{}) ->
-    {noreply, NewState :: #state{}} |
-    {noreply, NewState :: #state{}, timeout() | hibernate} |
-    {stop, Reason :: term(), NewState :: #state{}}).
+  {noreply, NewState :: #state{}} |
+  {noreply, NewState :: #state{}, timeout() | hibernate} |
+  {stop, Reason :: term(), NewState :: #state{}}).
 handle_cast(_Request, State) ->
-    {noreply, State}.
+  {noreply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -134,11 +118,19 @@ handle_cast(_Request, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec(handle_info(Info :: timeout() | term(), State :: #state{}) ->
-    {noreply, NewState :: #state{}} |
-    {noreply, NewState :: #state{}, timeout() | hibernate} |
-    {stop, Reason :: term(), NewState :: #state{}}).
-handle_info(_Info, State) ->
-    {noreply, State}.
+  {noreply, NewState :: #state{}} |
+  {noreply, NewState :: #state{}, timeout() | hibernate} |
+  {stop, Reason :: term(), NewState :: #state{}}).
+handle_info({init, {MinZ, MaxZ}}, #state{zyx = {Z, Y, X}} = State) ->
+  utils_log:debug("[~p, ~p] handle_info {MinZ, MaxZ}: ~p, {Z, Y, X}: ~p", [?MODULE, ?LINE, {MinZ, MaxZ}, {Z, Y, X}]),
+  utils_tool:init_z([{MinZ, MaxZ}, {Y, Y + 9}, {X, X + 9}]),
+  {noreply, State};
+handle_info({data, List}, #state{zyx = {Z, Y, X}} = State) ->
+  utils_log:debug("[~p, ~p] handle_info List: ~p, {Z, Y, X}: ~p", [?MODULE, ?LINE, List, {Z, Y, X}]),
+  {noreply, State};
+handle_info(Info, State) ->
+  utils_log:debug("[~p, ~p] handle_info Info: ~p", [?MODULE, ?LINE, Info]),
+  {noreply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -153,9 +145,8 @@ handle_info(_Info, State) ->
 %%--------------------------------------------------------------------
 -spec(terminate(Reason :: (normal | shutdown | {shutdown, term()} | term()),
     State :: #state{}) -> term()).
-terminate(_Reason, #state{ref = Ref} = _State) ->
-    erocksdb:close(Ref),
-    ok.
+terminate(_Reason, _State) ->
+  ok.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -167,20 +158,10 @@ terminate(_Reason, #state{ref = Ref} = _State) ->
 %%--------------------------------------------------------------------
 -spec(code_change(OldVsn :: term() | {down, term()}, State :: #state{},
     Extra :: term()) ->
-    {ok, NewState :: #state{}} | {error, Reason :: term()}).
+  {ok, NewState :: #state{}} | {error, Reason :: term()}).
 code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+  {ok, State}.
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-do_put(ok) ->
-    ok;
-do_put({error, _Ref, Reason}) ->
-    {error, Reason}.
-
-do_get({ok, Value}) ->
-    {ok, Value};
-do_get(Result) ->
-    {error, Result}.
-
